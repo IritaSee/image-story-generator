@@ -1,0 +1,31 @@
+version: 1.0
+runtime: python3
+build:
+  commands:
+    pre-build:
+      - echo "Installing dependencies..."
+    build:
+      - pip install -r requirements.txt
+    post-build:
+      - echo "Build completed successfully"
+run:
+  runtime-version: 3.11
+  command: gunicorn --bind 0.0.0.0:8080 --workers 4 --timeout 120 'app:create_app("production")'
+  network:
+    port: 8080
+    env: APP_PORT
+  env:
+    - name: FLASK_ENV
+      value: "production"
+    - name: PYTHONUNBUFFERED
+      value: "1"
+    - name: MAX_CONTENT_LENGTH
+      value: "5242880"
+    - name: MAX_IMAGES_PER_REQUEST
+      value: "10"
+    - name: ALLOWED_EXTENSIONS
+      value: "png,jpg,jpeg,webp"
+    - name: REQUEST_TIMEOUT
+      value: "30"
+    - name: MAX_RETRIES
+      value: "3"
