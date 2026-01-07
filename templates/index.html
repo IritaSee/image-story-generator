@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Story Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🎨 Image Story Generator</h1>
+            <button id="settingsBtn" class="icon-btn" title="API Settings">⚙️</button>
+        </header>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>API Settings</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-group">
+                        <h3>🔍 Image Search APIs</h3>
+                        <div class="api-config">
+                            <label>
+                                Google Custom Search API Key
+                                <input type="password" id="googleApiKey" placeholder="Enter API key">
+                                <span class="status-indicator" id="googleStatus"></span>
+                            </label>
+                            <label>
+                                Custom Search Engine ID
+                                <input type="text" id="googleCseId" placeholder="Enter CSE ID">
+                            </label>
+                        </div>
+                        <div class="api-config">
+                            <label>
+                                Bing Search API Key
+                                <input type="password" id="bingApiKey" placeholder="Enter API key">
+                                <span class="status-indicator" id="bingStatus"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>🤖 LLM APIs</h3>
+                        <div class="api-config">
+                            <label>
+                                OpenAI API Key
+                                <input type="password" id="openaiApiKey" placeholder="Enter API key">
+                                <span class="status-indicator" id="openaiStatus"></span>
+                            </label>
+                        </div>
+                        <div class="api-config">
+                            <label>
+                                Anthropic API Key
+                                <input type="password" id="anthropicApiKey" placeholder="Enter API key">
+                                <span class="status-indicator" id="anthropicStatus"></span>
+                            </label>
+                        </div>
+                        <div class="api-config">
+                            <label>
+                                Google AI API Key
+                                <input type="password" id="googleAiApiKey" placeholder="Enter API key">
+                                <span class="status-indicator" id="googleAiStatus"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>🎨 Image Generation APIs</h3>
+                        <div class="api-config">
+                            <label>
+                                Stability AI API Key
+                                <input type="password" id="stabilityApiKey" placeholder="Enter API key">
+                                <span class="status-indicator" id="stabilityStatus"></span>
+                            </label>
+                        </div>
+                        <div class="api-config">
+                            <label>
+                                Replicate API Key
+                                <input type="password" id="replicateApiKey" placeholder="Enter API key">
+                                <span class="status-indicator" id="replicateStatus"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        ⚠️ API keys are stored in your browser's localStorage. Use HTTPS in production for security.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="saveSettings" class="btn btn-primary">Save Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Few-Shot Examples Panel -->
+        <div id="fewShotPanel" class="sidebar">
+            <div class="sidebar-header">
+                <h3>📚 Few-Shot Examples</h3>
+                <button id="toggleFewShot" class="icon-btn">◀</button>
+            </div>
+            <div class="sidebar-content">
+                <p class="help-text">Upload example image-story pairs to guide the AI's output style.</p>
+                <div id="examplesList"></div>
+                <button id="addExample" class="btn btn-secondary">+ Add Example</button>
+                <div class="example-actions">
+                    <button id="exportExamples" class="btn btn-outline">Export</button>
+                    <button id="importExamples" class="btn btn-outline">Import</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Modal -->
+        <div id="exampleModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add Few-Shot Example</h2>
+                    <span class="close" id="closeExample">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <label>
+                        Upload Image
+                        <input type="file" id="exampleImage" accept="image/*">
+                    </label>
+                    <div id="exampleImagePreview" class="image-preview"></div>
+                    <label>
+                        Story Text
+                        <textarea id="exampleStory" rows="6" placeholder="Enter the example story..."></textarea>
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button id="saveExample" class="btn btn-primary">Save Example</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Tab Navigation -->
+            <div class="tabs">
+                <button class="tab active" data-tab="search">🔍 Search Images</button>
+                <button class="tab" data-tab="upload">📤 Upload Images</button>
+                <button class="tab" data-tab="generate">🎨 Generate Image</button>
+            </div>
+
+            <!-- Search Tab -->
+            <div id="searchTab" class="tab-content active">
+                <div class="search-section">
+                    <div class="search-bar">
+                        <select id="searchProvider">
+                            <option value="google">Google</option>
+                            <option value="bing">Bing</option>
+                        </select>
+                        <input type="text" id="searchQuery" placeholder="Search for images...">
+                        <button id="searchBtn" class="btn btn-primary">Search</button>
+                    </div>
+                    <div class="selected-count">Selected: <span id="selectedCount">0</span>/10</div>
+                    <div id="searchResults" class="image-grid"></div>
+                </div>
+            </div>
+
+            <!-- Upload Tab -->
+            <div id="uploadTab" class="tab-content">
+                <div class="upload-section">
+                    <div id="dropZone" class="drop-zone">
+                        <p>📁 Drag & drop images here or click to browse</p>
+                        <p class="help-text">Max 10 images, 5MB each</p>
+                        <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+                    </div>
+                    <div class="upload-count">Uploaded: <span id="uploadedCount">0</span>/10</div>
+                    <div id="uploadedImages" class="image-grid"></div>
+                </div>
+            </div>
+
+            <!-- Generate Image Tab -->
+            <div id="generateTab" class="tab-content">
+                <div class="generate-section">
+                    <h3>Generate Image from Text</h3>
+                    <label>
+                        Image Prompt
+                        <textarea id="imagePrompt" rows="4" placeholder="Describe the image you want to generate..."></textarea>
+                    </label>
+                    
+                    <div class="form-row">
+                        <label>
+                            Provider
+                            <select id="imageGenProvider">
+                                <option value="openai">OpenAI DALL-E</option>
+                                <option value="stability">Stability AI</option>
+                                <option value="replicate">Replicate</option>
+                            </select>
+                        </label>
+                        <label id="imageGenModelLabel">
+                            Model
+                            <select id="imageGenModel">
+                                <option value="dall-e-3">DALL-E 3</option>
+                                <option value="dall-e-2">DALL-E 2</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <!-- OpenAI Parameters -->
+                    <div id="dalleParams" class="params-group">
+                        <div class="form-row">
+                            <label>
+                                Size
+                                <select id="dalleSize">
+                                    <option value="1024x1024">1024x1024</option>
+                                    <option value="1792x1024">1792x1024</option>
+                                    <option value="1024x1792">1024x1792</option>
+                                </select>
+                            </label>
+                            <label>
+                                Quality
+                                <select id="dalleQuality">
+                                    <option value="standard">Standard</option>
+                                    <option value="hd">HD</option>
+                                </select>
+                            </label>
+                            <label>
+                                Style
+                                <select id="dalleStyle">
+                                    <option value="vivid">Vivid</option>
+                                    <option value="natural">Natural</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Stability AI Parameters -->
+                    <div id="stabilityParams" class="params-group" style="display: none;">
+                        <div class="form-row">
+                            <label>
+                                Width
+                                <input type="number" id="stabilityWidth" value="1024" min="512" max="2048" step="64">
+                            </label>
+                            <label>
+                                Height
+                                <input type="number" id="stabilityHeight" value="1024" min="512" max="2048" step="64">
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                CFG Scale: <span id="cfgScaleValue">7</span>
+                                <input type="range" id="cfgScale" min="0" max="35" value="7" step="0.5">
+                            </label>
+                            <label>
+                                Steps: <span id="stepsValue">30</span>
+                                <input type="range" id="steps" min="10" max="50" value="30" step="1">
+                            </label>
+                        </div>
+                    </div>
+
+                    <button id="generateImageBtn" class="btn btn-primary">Generate Image</button>
+                    <div id="generatedImageResult" class="generated-result"></div>
+                </div>
+            </div>
+
+            <!-- Story Generation Panel -->
+            <div class="story-panel">
+                <h3>💬 Story Generation</h3>
+                
+                <!-- Model Selection -->
+                <div class="form-row">
+                    <label>
+                        Provider
+                        <select id="llmProvider">
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="google">Google</option>
+                        </select>
+                    </label>
+                    <label>
+                        Model
+                        <select id="llmModel">
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        </select>
+                    </label>
+                </div>
+
+                <!-- Parameter Presets -->
+                <div class="presets">
+                    <button class="preset-btn" data-temp="0.3">Precise</button>
+                    <button class="preset-btn" data-temp="1.0">Balanced</button>
+                    <button class="preset-btn" data-temp="1.5">Creative</button>
+                </div>
+
+                <!-- Basic Parameters -->
+                <div class="param-group">
+                    <label>
+                        Temperature: <span id="tempValue">1.0</span>
+                        <input type="range" id="temperature" min="0" max="2" value="1.0" step="0.1">
+                    </label>
+                    <label>
+                        Max Tokens: <span id="tokensValue">1000</span>
+                        <input type="range" id="maxTokens" min="100" max="4096" value="1000" step="50">
+                    </label>
+                    <label>
+                        Top P: <span id="topPValue">1.0</span>
+                        <input type="range" id="topP" min="0" max="1" value="1.0" step="0.05">
+                    </label>
+                </div>
+
+                <!-- Advanced Parameters (Collapsible) -->
+                <details class="advanced-params">
+                    <summary>Advanced Parameters</summary>
+                    <div class="param-group">
+                        <label id="topKLabel" style="display: none;">
+                            Top K: <span id="topKValue">40</span>
+                            <input type="range" id="topK" min="1" max="100" value="40" step="1">
+                        </label>
+                        <label id="thinkingBudgetLabel" style="display: none;">
+                            Thinking Budget: <span id="thinkingBudgetValue">5000</span>
+                            <input type="range" id="thinkingBudget" min="1000" max="20000" value="5000" step="1000">
+                        </label>
+                    </div>
+                </details>
+
+                <button id="generateStoryBtn" class="btn btn-primary btn-large">Generate Story</button>
+                
+                <!-- Results -->
+                <div id="storyResult" class="story-result" style="display: none;">
+                    <div class="result-header">
+                        <h4>Generated Story</h4>
+                        <div class="result-actions">
+                            <button id="copyStory" class="icon-btn" title="Copy">📋</button>
+                            <button id="saveStory" class="icon-btn" title="Save">💾</button>
+                            <button id="regenerateStory" class="icon-btn" title="Regenerate">🔄</button>
+                        </div>
+                    </div>
+                    <div id="storyText" class="story-text"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+            <p id="loadingText">Processing...</p>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
