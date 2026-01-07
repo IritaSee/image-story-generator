@@ -269,6 +269,22 @@ python app.py
 ```
 
 ### Production deployment:
+
+#### Docker (Local)
+```bash
+docker build -t image-story-generator .
+docker run -p 5000:5000 image-story-generator
+```
+
+#### Docker Compose
+```bash
+docker-compose up -d
+```
+
+#### AWS App Runner (Automated)
+The repository includes a GitHub Actions workflow for automated deployment to AWS App Runner. See [AWS Deployment Guide](.github/AWS_DEPLOYMENT.md) for setup instructions.
+
+#### Manual (Gunicorn)
 ```bash
 gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ```
