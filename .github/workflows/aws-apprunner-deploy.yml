@@ -52,13 +52,31 @@ jobs:
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
             >> $GITHUB_OUTPUT
 
+      - name: Resolve Access Role ARN
+        id: resolve-role
+        run: |
+          INPUT="${{ secrets.APP_RUNNER_ACCESS_ROLE_ARN }}"
+          if [[ -z "$INPUT" ]]; then
+            echo "APP_RUNNER_ACCESS_ROLE_ARN is not set. Provide the full ARN or role name as a secret." >&2
+            exit 1
+          fi
+          if [[ "$INPUT" =~ ^arn:aws:iam::[0-9]{12}:role/ ]]; then
+            echo "arn=$INPUT" >> "$GITHUB_OUTPUT"
+          else
+            if [[ -z "${{ secrets.AWS_ACCOUNT_ID }}" ]]; then
+              echo "Source Account ID is required when a role name is provided. Set secrets.AWS_ACCOUNT_ID or provide a full role ARN in secrets.APP_RUNNER_ACCESS_ROLE_ARN." >&2
+              exit 1
+            fi
+            echo "arn=arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/$INPUT" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Deploy to App Runner
         id: deploy-apprunner
         uses: awslabs/amazon-app-runner-deploy@main
         with:
           service: ${{ env.APP_RUNNER_SERVICE }}
           image: ${{ steps.build-image.outputs.image }}
-          access-role-arn: ${{ secrets.APP_RUNNER_ACCESS_ROLE_ARN }}
+          access-role-arn: ${{ steps.resolve-role.outputs.arn }}
           region: ${{ env.AWS_REGION }}
           cpu: 1
           memory: 2
