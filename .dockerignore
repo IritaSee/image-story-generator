@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual envs
+venv/
+.env
+
+# VCS
+.git/
+.gitignore
+
+# OS files
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Node
+node_modules/
+
+# Uploads (handled via volume)
+static/uploads/
+
+# Logs
+*.log
