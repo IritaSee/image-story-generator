@@ -3,8 +3,7 @@ name: Build and Deploy to AWS App Runner
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - master
 
 env:
   AWS_REGION: ap-southeast-1
@@ -55,7 +54,7 @@ jobs:
 
       - name: Deploy to App Runner
         id: deploy-apprunner
-        uses: awslabs/amazon-app-runner-deploy@v1
+        uses: awslabs/amazon-app-runner-deploy@main
         with:
           service: ${{ env.APP_RUNNER_SERVICE }}
           image: ${{ steps.build-image.outputs.image }}
