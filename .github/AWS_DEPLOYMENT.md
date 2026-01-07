@@ -114,11 +114,23 @@ aws iam attach-role-policy \
 
 If not already configured, add GitHub as an OIDC provider:
 
+> **Note**: The thumbprint value below may change over time. For the most
+> current thumbprint, refer to [GitHub's documentation](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
+> or use the AWS CLI to automatically retrieve it.
+
 ```bash
 aws iam create-open-id-connect-provider \
   --url https://token.actions.githubusercontent.com \
   --client-id-list sts.amazonaws.com \
   --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
+```
+
+Alternatively, let AWS automatically determine the thumbprint:
+
+```bash
+aws iam create-open-id-connect-provider \
+  --url https://token.actions.githubusercontent.com \
+  --client-id-list sts.amazonaws.com
 ```
 
 ## GitHub Secrets Configuration
