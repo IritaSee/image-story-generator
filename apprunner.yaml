@@ -14,8 +14,8 @@ run:
     - python3 -m pip install gunicorn
 
   # FIXED COMMAND: 
-  # Gunicorn calls create_app(), which reads FLASK_CONFIG='production'
-  command: gunicorn --bind 0.0.0.0:8080 --workers 4 --timeout 120 app:create_app
+  # Gunicorn calls the pre-created app object from app.py
+  command: gunicorn --bind 0.0.0.0:8080 --workers 4 --timeout 120 app:app
 
   network:
     port: 8080
