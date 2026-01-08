@@ -4,21 +4,23 @@ import os
 from config import config
 from utils.error_handlers import register_error_handlers
 
-
-def create_app(config_name='default'):
+# CHANGED: Default config_name to None so we can check the environment variable
+def create_app(config_name=None):
     """Application factory"""
+    
+    # NEW LOGIC: If no argument is passed, check environment variable, else default to 'default'
+    if config_name is None:
+        config_name = os.getenv('FLASK_CONFIG', 'default')
+
     app = Flask(__name__)
     
     # Load configuration
     app.config.from_object(config[config_name])
     
-    # Enable CORS
+    # ... rest of your code remains exactly the same ...
     CORS(app)
-    
-    # Register error handlers
     register_error_handlers(app)
     
-    # Register blueprints
     from routes.image_search import bp as search_bp
     from routes.story_generation import bp as story_bp
     from routes.image_generation import bp as image_gen_bp
@@ -27,16 +29,13 @@ def create_app(config_name='default'):
     app.register_blueprint(story_bp)
     app.register_blueprint(image_gen_bp)
     
-    # Create upload folder if it doesn't exist
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
-    # Main route
     @app.route('/')
     def index():
         return render_template('index.html')
     
     return app
-
 
 if __name__ == '__main__':
     app = create_app(os.getenv('FLASK_ENV', 'development'))

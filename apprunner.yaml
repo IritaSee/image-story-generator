@@ -8,24 +8,32 @@ build:
 
 run:
   runtime-version: 3.11
-  # 1. INSTALLATION: Must be in pre-run for Python 3.11
+  # Install dependencies right before the app starts (required for Python 3.11)
   pre-run:
     - python3 -m pip install -r requirements.txt
-    - python3 -m pip install gunicorn  # Ensure gunicorn is installed
+    - python3 -m pip install gunicorn
 
-  # 2. COMMAND: Switched back to gunicorn (Production Ready)
-  command: gunicorn --bind 0.0.0.0:8080 --workers 4 --timeout 120 "app:create_app('production')"
+  # FIXED COMMAND: 
+  # Gunicorn calls create_app(), which reads FLASK_CONFIG='production'
+  command: gunicorn --bind 0.0.0.0:8080 --workers 4 --timeout 120 app:create_app
 
   network:
     port: 8080
   env:
+    # This tells your updated app.py to load the 'production' config
+    - name: FLASK_CONFIG
+      value: "production"
     - name: FLASK_ENV
       value: "production"
     - name: PYTHONUNBUFFERED
       value: "1"
     - name: MAX_CONTENT_LENGTH
       value: "5242880"
+    - name: MAX_IMAGES_PER_REQUEST
+      value: "10"
     - name: ALLOWED_EXTENSIONS
       value: "png,jpg,jpeg,webp"
     - name: REQUEST_TIMEOUT
       value: "30"
+    - name: MAX_RETRIES
+      value: "3"
