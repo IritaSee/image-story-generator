@@ -1,16 +1,17 @@
 version: 1.0
-runtime: python311    # CHANGED: Use the specific Python 3.11 platform identifier
+runtime: python311
 
 build:
   commands:
     pre-build:
       - echo "Installing dependencies..."
     build:
-      - pip install -r requirements.txt
+      - pip3 install -r requirements.txt      # <--- CHANGED THIS LINE (pip -> pip3)
     post-build:
       - echo "Build completed successfully"
 run:
-  runtime-version: 3.11   # CHANGED: Set to the latest supported version
+  runtime-version: 3.11
+  # Use python3 or gunicorn explicitly
   command: gunicorn --bind :8080 --workers 4 --timeout 120 'app:create_app("production")'
   network:
     port: 8080
