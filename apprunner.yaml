@@ -3,14 +3,16 @@ runtime: python311
 
 build:
   commands:
-    pre-build:
-      - echo "Installing dependencies..."
     build:
-      - python3 -m pip install -r requirements.txt   # <--- CHANGED THIS LINE (pip -> pip3)
-    post-build:
-      - echo "Build completed successfully"
+      - echo "Skipping build-phase install to avoid dependency loss"
+
 run:
   runtime-version: 3.11
+  # CRITICAL CHANGE: Install dependencies here using pre-run
+  pre-run:
+    - python3 -m pip install -r requirements.txt
+  
+  # Note: I kept your command, but 'gunicorn' is much better for production than 'flask run'
   command: python3 -m flask --app 'app:create_app("production")' run --host 0.0.0.0 --port 8080
   network:
     port: 8080
